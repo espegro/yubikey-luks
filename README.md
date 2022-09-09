@@ -23,7 +23,7 @@ nvme0n1               259:0    0 953,9G  0 disk
     ├─vgubuntu-root   253:1    0 930,4G  0 lvm   /
     └─vgubuntu-swap_1 253:2    0   976M  0 lvm   [SWAP]
 ```
-In this case the name is *nvme0n1*
+In this case the name is *nvme0n1p3*
 
 ## Make sure keyslot 1 is empty
 ```
@@ -107,6 +107,12 @@ $sudo update-initramfs -u
 ```
 
 ## Reboot!
+
+Now you can:
+
+* Boot without YubiKey and enter unlock password as normal or...
+* Boot with the YubiKey inserted - the machine should then boot without user interaction (if the challenge is in ykluks.cfg)
+* Boot to luks password prompt, insert YubiKey and enter challenge
 
 Links:
 
