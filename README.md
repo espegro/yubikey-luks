@@ -1,18 +1,17 @@
 # yubikey-luks
 Yubikey LUKS setup for Ubuntu 22.04 LTS
 
-Install yubikey-personalization and yubikey-luks
+## Install yubikey-personalization and yubikey-luks
 ```
 $ sudo apt install yubikey-luks yubikey-personalization
 ```
 
-Plug in the YubiKey and set up slot 2 for challenge response
+## Plug in the YubiKey and set up slot 2 for challenge response
 ```
 $ ykpersonalize -2 -ochal-resp -ochal-hmac -ohmac-lt64 -oserial-api-visible
 ```
 
-Run lsblk if you are unsure of the name of your LUKS partition
-
+## Run lsblk if you are unsure of the name of your LUKS partition
 ```
 root@laptop:~# lsblk
 NAME                  MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
@@ -26,7 +25,7 @@ nvme0n1               259:0    0 953,9G  0 disk
 ```
 In this case the name is *nvme0n1*
 
-Make sure keyslot 1 is empty
+## Make sure keyslot 1 is empty
 ```
 $ sudo cryptsetup luksDump /dev/nvme0n1p3
 LUKS header information
@@ -70,13 +69,13 @@ Tokens:
 
 There should be no *1: luks2* entry.
 
-Assign the YubiKey to slot 1
+## Assign the YubiKey to slot 1
 ```
 $ sudo yubikey-luks-enroll -d /dev/nvme0n1p3 -s 1
 ```
 Remember the challenge/passphrase you used!
 
-Update */etc/cryptab*
+## Update */etc/cryptab*
 
 Change from
 ```
@@ -89,7 +88,7 @@ nvme0n1p3_crypt UUID=abcdefab-1234-abcd-abcd-123456789abc none luks,discard,keys
 ```
 (the value *abcdefab-1234-abcd-abcd-123456789abc* will be the UUID of your disk) 
 
-
+## Boot without user interaction
 If you want the machine to be unlocked only by the YubiKey, you can add the challenge/passphrase from the enrollment step to */etc/ykluks.cfg*
 
 Add a line with the challenge
@@ -97,11 +96,20 @@ Add a line with the challenge
 YUBIKEY_CHALLENGE="YOUR PASSPHRASE HERE"
 ```
 
-IMPORTANT:
+# IMPORTANT:
 
 Replace the */usr/share/yubikey-luks/ykluks-keyscript* from the yubikey-luks package with the file from this repo.
 The file from the 22.04 is broken ( the YUBIKEY_CHALLENGE part do not work! )
 
-Update the *initramfs*
+## Update the *initramfs*
 ```
 $sudo update-initramfs -u
+```
+
+## Reboot!
+
+Links:
+
+[Using a YubiKey as authentication for an encrypted disk](https://www.endpointdev.com/blog/2022/03/disk-decryption-yubikey/)
+
+[https://github.com/cornelinux/yubikey-luks](https://github.com/cornelinux/yubikey-luks)
