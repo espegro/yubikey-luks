@@ -2,6 +2,7 @@
 #
 # This is /sbin/ykluks-keyscript, which gets called when unlocking the disk
 #
+YUBIKEY_LUKS_SLOT=2 #Set this in case the value is missing in /etc/ykluks.cfg
 
 . /etc/ykluks.cfg
 
@@ -19,48 +20,37 @@ message()
     return 0
 }
 
-# source for log_*_msg() functions, see LP: #272301
-if [ -e /scripts/functions ] ; then
-        . /scripts/functions
+check_yubikey_present="$(ykinfo -q -"$YUBIKEY_LUKS_SLOT")"
+
+if [ -z "$YUBIKEY_CHALLENGE" ] || [ "$check_yubikey_present" != "1" ] ; then
+  if [ -z "$cryptkeyscript" ]; then
+      if [ -x /bin/plymouth ] && plymouth --ping; then
+          cryptkeyscript="plymouth ask-for-password --prompt"
+      else
+          cryptkeyscript="/lib/cryptsetup/askpass"
+      fi
+  fi
+  PW="$($cryptkeyscript "$WELCOME_TEXT")"
 else
-        . /usr/share/initramfs-tools/scripts/functions
+  PW="$YUBIKEY_CHALLENGE"
 fi
 
-
-check_yubikey_present="$(ykinfo -q -2)"
-
 if [ "$check_yubikey_present" = "1" ]; then
-        message "Yubikey present"
-else
-        if [ -z "$cryptkeyscript" ]; then
-                cryptkey="Unlocking the disk $cryptsource ($crypttarget)\\nEnter passphrase: "
-                if [ -x /bin/plymouth ] && plymouth --ping; then
-                        cryptkeyscript="plymouth ask-for-password --prompt"
-                        cryptkey=$(printf '%s' "$cryptkey")
-                else
-                        cryptkeyscript="/lib/cryptsetup/askpass"
-                fi
-        fi
-        PW="$($cryptkeyscript "$WELCOME_TEXT")"
-fi
-
-check_yubikey_present="$(ykinfo -q -2)"
-
-if [ "$check_yubikey_present" = "1" ]; then
-        if [ -n "$YUBIKEY_CHALLENGE" ]; then
-                PW=$YUBIKEY_CHALLENGE
-        fi
-        message "Accessing yubikey..."
-        if [ "$HASH" = "1" ]; then
-                PW=$(printf %s "$PW" | sha256sum | awk '{print $1}')
-        fi
-        R="$(printf %s "$PW" | ykchalresp -2 -i- 2>/dev/null || true)"
+    message "Accessing yubikey..."
+    if [ "$HASH" = "1" ]; then
+        PW=$(printf %s "$PW" | sha256sum | awk '{print $1}')
+    fi
+    R="$(printf %s "$PW" | ykchalresp -"$YUBIKEY_LUKS_SLOT" -i- 2>/dev/null || true)"
+    if [ "$R" ]; then
         message "Retrieved the response from the Yubikey"
         if [ "$CONCATENATE" = "1" ]; then
-                printf '%s' "$PW$R"
+            printf '%s' "$PW$R"
         else
-                printf '%s' "$R"
+            printf '%s' "$R"
         fi
+    else
+        message "Failed to retrieve the response from the Yubikey"
+    fi
 else
         printf '%s' "$PW"
 fi
