@@ -1,5 +1,5 @@
 # yubikey-luks
-Yubikey LUKS setup for Ubuntu 22.04 LTS
+Yubikey LUKS setup for Ubuntu 22.04 LTS, also testet on 24.04 LTS
 
 ## Install yubikey-personalization and yubikey-luks
 ```
