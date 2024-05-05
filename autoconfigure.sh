@@ -66,8 +66,6 @@ fi
 if [[ -n $SELECTED_DEVICE ]]; then
     echo "Selected LUKS device for YubiKey configuration: $SELECTED_DEVICE"
     # Now, you can use "$SELECTED_DEVICE" with the yubikey-luks-enroll command
-    echo "sudo yubikey-luks-enroll -d $SELECTED_DEVICE -s 1"
-    # Uncomment the next line to actually perform the operation
     sudo yubikey-luks-enroll -d "$SELECTED_DEVICE" -s 1
     sudo mkdir -p /usr/share/yubikey-luks
     sudo cp ykluks-keyscript /usr/share/yubikey-luks
