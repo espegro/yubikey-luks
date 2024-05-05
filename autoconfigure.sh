@@ -1,5 +1,17 @@
 #!/bin/bash
 
+# Default slot number
+SLOT=1
+
+# Parse command-line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --slot) SLOT="$2"; shift ;; # Assign the next argument as the slot number
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift # Move to the next parameter
+done
+
 # Initializes an array to store paths of discovered LUKS devices.
 luksDevices=()
 
@@ -68,7 +80,7 @@ if [[ -n $SELECTED_DEVICE ]]; then
     echo "Selected LUKS device for YubiKey configuration: $SELECTED_DEVICE"
     
     # Enrolls the YubiKey with the selected LUKS device.
-    sudo yubikey-luks-enroll -d "$SELECTED_DEVICE" -s 1
+    sudo yubikey-luks-enroll -d "$SELECTED_DEVICE" -s "$SLOT"
     
     # Prepares the ykluks-keyscript in the system.
     sudo mkdir -p /usr/share/yubikey-luks
