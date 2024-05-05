@@ -81,10 +81,21 @@ if [[ -n $SELECTED_DEVICE ]]; then
     
     # Enrolls the YubiKey with the selected LUKS device.
     sudo yubikey-luks-enroll -d "$SELECTED_DEVICE" -s "$SLOT"
+
+    # Check if the previous command was successful
+    if [ $? -ne 0 ]; then
+        echo "The yubikey-luks-enroll command failed. Exiting the script."
+        exit 1
+    fi
     
     # Prepares the ykluks-keyscript in the system.
     sudo mkdir -p /usr/share/yubikey-luks
     sudo cp ykluks-keyscript /usr/share/yubikey-luks
+    # Check if the previous command was successful
+    if [ $? -ne 0 ]; then
+        echo "The ykluks-keyscript copy command failed. Exiting the script."
+        exit 1
+    fi
     sudo chmod +x /usr/share/yubikey-luks/ykluks-keyscript
     
     # Defines the path to the crypttab file for modification.
