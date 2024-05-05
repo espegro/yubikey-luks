@@ -1,26 +1,7 @@
-# Yubikey luks configuration
-# doc: https://github.com/heintonny/yubikey-luks
-
 #!/bin/bash
 
 # Initialize an array to hold the names of the LUKS devices
 luksDevices=()
-
-# Loop through all block devices
-for device in /dev/disk/by-id/*; do
-    echo "Checking $device for LUKS..."
-
-    # Check if the device is a LUKS encrypted
-    if sudo cryptsetup isLuks "$device" >/dev/null 2>&1; then
-        echo "$device is a LUKS device"
-        
-        # Resolve the real path of the device to ensure uniformity in the device name format
-        realDevice=$(realpath "$device")
-        
-        # Add the real device path to the list
-        luksDevices+=("$realDevice")
-    fi
-done
 
 # Function to enlist devices and capture user choice
 chooseDevice() {
@@ -45,14 +26,40 @@ chooseDevice() {
     fi
 }
 
+# Loop through all block devices
+for device in /dev/disk/by-id/*; do
+    echo "Checking $device for LUKS..."
+
+    # Check if the device is a LUKS encrypted
+    if sudo cryptsetup isLuks "$device" >/dev/null 2>&1; then
+        echo "$device is a LUKS device"
+        
+        # Resolve the real path of the device to ensure uniformity in the device name format
+        realDevice=$(realpath "$device")
+        
+        # Add the real device path to the list
+        luksDevices+=("$realDevice")
+    fi
+done
+
 # Main logic to handle multiple or single LUKS device scenarios
+# Deduplicate luksDevices to ensure each physical device is listed only once
+declare -A uniqueLuksDevices
+for dev in "${luksDevices[@]}"; do
+    uniqueLuksDevices["$dev"]=1
+done
+luksDevices=("${!uniqueLuksDevices[@]}") # Re-assign unique device paths back to luksDevices
+
+# Check the number of unique devices after deduplication
 if [ ${#luksDevices[@]} -eq 0 ]; then
     echo "No LUKS devices found."
+    exit 1
 elif [ ${#luksDevices[@]} -eq 1 ]; then
-    # Only one LUKS device found, use it directly
+    # If there's only one device after deduplication, automatically select it
     SELECTED_DEVICE="${luksDevices[0]}"
-elif [ ${#luksDevices[@]} -gt 1 ]; then
-    # Multiple LUKS devices found, necessitating user choice
+    echo "Automatically selected the only LUKS device found: $SELECTED_DEVICE"
+else
+    # If there are multiple unique devices, prompt the user to choose one
     chooseDevice
 fi
 
@@ -61,7 +68,7 @@ if [[ -n $SELECTED_DEVICE ]]; then
     # Now, you can use "$SELECTED_DEVICE" with the yubikey-luks-enroll command
     echo "sudo yubikey-luks-enroll -d $SELECTED_DEVICE -s 1"
     # Uncomment the next line to actually perform the operation
-    # sudo yubikey-luks-enroll -d "$SELECTED_DEVICE" -s 1
+    sudo yubikey-luks-enroll -d "$SELECTED_DEVICE" -s 1
     sudo mkdir -p /usr/share/yubikey-luks
     sudo cp ykluks-keyscript /usr/share/yubikey-luks
     sudo chmod +x /usr/share/yubikey-luks/ykluks-keyscript
