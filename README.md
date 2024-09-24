@@ -114,6 +114,17 @@ Now you can:
 * Boot with the YubiKey inserted - the machine should then boot without user interaction (if the challenge is in ykluks.cfg)
 * Boot to luks password prompt, insert YubiKey and enter challenge
 
+## Support for more disks
+
+If you want to unlock more than one disk there are several ways to do it. One simple solution is to:
+
+1. Make a random key and store it on the first encryped disk eg. /etc/luks-keys/disk-key1 (make sure only root has access).
+2. Add this key to a keyslot on the second disk
+3. Update /etc/crypttab to unlock the second disk using the keyfile ( eg. add a line >> home UUID=<UID of the encrypted second device> /etc/luks-keys/disk-key1 luks,discard << to crypttab
+4. Add a line in /etc/fstab to mount the unlocked second device
+
+   
+
 Links:
 
 [Using a YubiKey as authentication for an encrypted disk](https://www.endpointdev.com/blog/2022/03/disk-decryption-yubikey/)
