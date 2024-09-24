@@ -75,7 +75,7 @@ $ sudo yubikey-luks-enroll -d /dev/nvme0n1p3 -s 1
 ```
 Remember the challenge/passphrase you used!
 
-## Update */etc/cryptab*
+## Update */etc/crypttab*
 
 Change from
 ```
