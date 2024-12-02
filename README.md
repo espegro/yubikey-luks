@@ -91,9 +91,10 @@ nvme0n1p3_crypt UUID=abcdefab-1234-abcd-abcd-123456789abc none luks,discard,keys
 ## Boot without user interaction
 If you want the machine to be unlocked only by the YubiKey, you can add the challenge/passphrase from the enrollment step to */etc/ykluks.cfg*
 
-Add a line with the challenge
+Add the following lines
 ```
 YUBIKEY_CHALLENGE="YOUR PASSPHRASE HERE"
+YUBIKEY_LUKS_SLOT=2
 ```
 
 # IMPORTANT:
